@@ -12,14 +12,19 @@ import {
   nodejs,
   git,
   docker,
-  carrent,
-  jobit,
-  tripguide,
+  mongodb,
 } from "../assets";
+
+// Import new tech icons
+import cpp from "../assets/tech/c++.png";
+import mysql from "../assets/tech/mysql.png";
+import postgresql from "../assets/tech/postgres.png";
 
 // 👇 You must import your custom logo image files here, e.g.:
 import isro from "../assets/isro.png";       // 🛰️ Your ISRO uploaded logo
 import bt from "../assets/basictech.png";    // 🏢 Your BasicTech logo
+import storeit from "../assets/project/storeit.png";    // 📁 StoreIt project
+import inventory from "../assets/project/inventory-project.jpeg";    // 📦 Inventory project
 
 export const navLinks = [
   {
@@ -89,6 +94,18 @@ const technologies = [
     icon: nodejs,
   },
   {
+    name: "MongoDB",
+    icon: mongodb,
+  },
+  {
+    name: "MySQL",
+    icon: mysql,
+  },
+  {
+    name: "PostgreSQL",
+    icon: postgresql,
+  },
+  {
     name: "git",
     icon: git,
   },
@@ -155,67 +172,46 @@ const testimonials = [
 
 const projects = [
   {
-    name: "Car Rent",
+    name: "StoreIt",
     description:
-      "Web-based platform that allows users to search, book, and manage car rentals from various providers, providing a convenient and efficient solution for transportation needs.",
+      "Cloud-based platform to securely upload, organize, and share files with intuitive dashboards, robust search, and easy collaboration.",
     tags: [
       {
-        name: "react",
+        name: "Next.js",
         color: "blue-text-gradient",
       },
       {
-        name: "mongodb",
+        name: "Tailwind CSS",
         color: "green-text-gradient",
       },
       {
-        name: "tailwind",
+        name: "StoreIt",
         color: "pink-text-gradient",
       },
     ],
-    image: carrent,
-    source_code_link: "https://github.com/",
+    image: storeit,
+    source_code_link: "https://store-it-lovat-nine.vercel.app/",
   },
   {
-    name: "Job IT",
+    name: "Inventory Management",
     description:
-      "Web application that enables users to search for job openings, view estimated salary ranges for positions, and locate available jobs based on their current location.",
+      "Inventory management solution with intuitive dashboard, real-time stock alerts, secure user roles, powerful product and location tracking, and audit trails—engineered for reliability and ease of use.",
     tags: [
       {
-        name: "react",
+        name: "react-native",
         color: "blue-text-gradient",
       },
       {
-        name: "restapi",
+        name: "nodejs",
         color: "green-text-gradient",
       },
       {
-        name: "scss",
+        name: "Mysql",
         color: "pink-text-gradient",
       },
     ],
-    image: jobit,
-    source_code_link: "https://github.com/",
-  },
-  {
-    name: "Trip Guide",
-    description:
-      "A comprehensive travel booking platform that allows users to book flights, hotels, and rental cars, and offers curated recommendations for popular destinations.",
-    tags: [
-      {
-        name: "nextjs",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "supabase",
-        color: "green-text-gradient",
-      },
-      {
-        name: "css",
-        color: "pink-text-gradient",
-      },
-    ],
-    image: tripguide,
-    source_code_link: "https://github.com/",
+    image: inventory,
+    source_code_link: "https://sam2333-bolt-expo-nativewind--hmvtjgkldt.expo.app/",
   },
 ];
 
