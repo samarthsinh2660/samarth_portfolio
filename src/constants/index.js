@@ -146,27 +146,11 @@ const experiences = [
 const testimonials = [
   {
     testimonial:
-      "I thought it was impossible to make a website as beautiful as our product, but Rick proved me wrong.",
-    name: "Sara Lee",
-    designation: "CFO",
-    company: "Acme Co",
-    image: "https://randomuser.me/api/portraits/women/4.jpg",
-  },
-  {
-    testimonial:
-      "I've never met a web developer who truly cares about their clients' success like Rick does.",
-    name: "Chris Brown",
-    designation: "COO",
-    company: "DEF Corp",
-    image: "https://randomuser.me/api/portraits/men/5.jpg",
-  },
-  {
-    testimonial:
-      "After Rick optimized our website, our traffic increased by 50%. We can't thank them enough!",
-    name: "Lisa Wang",
+      "I've had the pleasure of working with Samarth on several projects, and I can say without hesitation that he's one of the most capable individuals I've collaborated with. His intelligence is matched only by his exceptional work ethic. Samarth consistently demonstrates strong ownership and accountability, helping us deliver projects ahead of schedule. He's someone I can always count on.",
+    name: "Pranav Pandey",
     designation: "CTO",
-    company: "456 Enterprises",
-    image: "https://randomuser.me/api/portraits/women/6.jpg",
+    company: "Basic Tech",
+    image: "https://randomuser.me/api/portraits/men/1.jpg",
   },
 ];
 
