@@ -152,6 +152,14 @@ const testimonials = [
     company: "Basic Tech",
     image: "https://randomuser.me/api/portraits/men/1.jpg",
   },
+  {
+    testimonial:
+      "During his internship at Basic Tech, Samarth quickly proved himself as a capable engineer by single-handedly building a fully functional Inventory Management mobile app. He leveraged AI tools to streamline development while maintaining top-tier quality. What started as a learning project is now actively used by our clients—a testament to his initiative, problem-solving, and impact.",
+    name: "Rushabh Agrawal",
+    designation: "Founder",
+    company: "Basic Tech",
+    image: "https://randomuser.me/api/portraits/men/1.jpg",
+  },
 ];
 
 const projects = [
