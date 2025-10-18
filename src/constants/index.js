@@ -25,6 +25,7 @@ import isro from "../assets/isro.png";       // 🛰️ Your ISRO uploaded logo
 import bt from "../assets/basictech.png";    // 🏢 Your BasicTech logo
 import storeit from "../assets/project/storeit.png";    // 📁 StoreIt project
 import inventory from "../assets/project/inventory-project.jpeg";    // 📦 Inventory project
+import fluentify from "../assets/project/fluentify.png";    // 🌍 Fluentify project
 
 export const navLinks = [
   {
@@ -204,6 +205,31 @@ const projects = [
     ],
     image: inventory,
     source_code_link: "https://sam2333-bolt-expo-nativewind--hmvtjgkldt.expo.app/",
+  },
+  {
+    name: "Fluentify",
+    description:
+      "AI-powered language learning platform with personalized courses, interactive contests, real-time voice practice, and intelligent chatbot assistance. Supports multiple languages including Spanish, French, German, Italian, Japanese, and Hindi.",
+    tags: [
+      {
+        name: "React",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "Vite",
+        color: "green-text-gradient",
+      },
+      {
+        name: "Tailwind CSS",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "AI",
+        color: "orange-text-gradient",
+      },
+    ],
+    image: fluentify,
+    source_code_link: "https://github.com/samarthsinh2660/Fluentify-Frontend",
   },
 ];
 
