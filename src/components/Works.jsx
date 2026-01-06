@@ -18,11 +18,11 @@ const ProjectCard = ({
   return (
     <motion.div 
       variants={fadeIn("up", "spring", index * 0.5, 0.75)}
-      className='bg-tertiary p-5 rounded-2xl sm:w-[360px] w-full transform hover:scale-105 transition-transform duration-300 cursor-pointer'
-      whileHover={{ scale: 1.05 }}
+      className='bg-tertiary p-5 rounded-2xl sm:w-[360px] w-full transform hover:scale-105 transition-all duration-300 cursor-pointer flex flex-col h-full'
+      whileHover={{ scale: 1.02 }}
       onClick={() => window.open(source_code_link, "_blank")}
     >
-        <div className='relative w-full h-[300px]'>
+        <div className='relative w-full h-[230px]'>
           <img
             src={image}
             alt='project_image'
@@ -46,9 +46,9 @@ const ProjectCard = ({
           </div>
         </div>
 
-        <div className='mt-5'>
+        <div className='mt-5 flex-grow'>
           <h3 className='text-white font-bold text-[24px]'>{name}</h3>
-          <p className='mt-2 text-secondary text-[14px]'>{description}</p>
+          <p className='mt-2 text-secondary text-[14px] line-clamp-4'>{description}</p>
         </div>
 
         <div className='mt-4 flex flex-wrap gap-2'>
@@ -95,4 +95,4 @@ const Works = () => {
   );
 };
 
-export default SectionWrapper(Works, "");
+export default SectionWrapper(Works, "projects");

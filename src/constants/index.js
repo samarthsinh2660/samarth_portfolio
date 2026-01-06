@@ -13,19 +13,19 @@ import {
   git,
   docker,
   mongodb,
+  webpack,
+  newtech,
+  bt,
+  storeit,
+  inventory,
+  fluentify,
+  codeconnect,
 } from "../assets";
 
 // Import new tech icons
 import cpp from "../assets/tech/c++.png";
 import mysql from "../assets/tech/mysql.png";
 import postgresql from "../assets/tech/postgres.png";
-
-// 👇 You must import your custom logo image files here, e.g.:
-import isro from "../assets/isro.png";       // 🛰️ Your ISRO uploaded logo
-import bt from "../assets/basictech.png";    // 🏢 Your BasicTech logo
-import storeit from "../assets/project/storeit.png";    // 📁 StoreIt project
-import inventory from "../assets/project/inventory-project.jpeg";    // 📦 Inventory project
-import fluentify from "../assets/project/fluentify.png";    // 🌍 Fluentify project
 
 export const navLinks = [
   {
@@ -118,33 +118,53 @@ const technologies = [
 
 const experiences = [
   {
-    title: "Web & App Development Intern",
-    company_name: "BasicTech",
-    icon: bt,
-    iconBg: "#0d0d0d",
-    date: "May 2024 - Present",
+    title: "Core Contributor",
+    company_name: "Webpack",
+    icon: webpack,
+    iconBg: "#ffffff",
+    date: "December 2025 – Present",
     points: [
-      "Built 'Hill Quill' – a tourism and logistics platform for Uttarakhand.",
-      "Developed a full-stack inventory management system using React Native, Node.js, and PostgreSQL.",
-      "Implemented CI/CD pipelines, integrated API services, and deployed on AWS.",
+      "Authored 6+ merged pull requests to Webpack core, fixing export analysis, stats configuration bugs, runtime error handling, and CommonJS edge cases with full regression test coverage.",
+      "Contributed internal optimizations demonstrating a 21% improvement in CodSpeed production benchmarks.",
     ],
   },
   {
-    title: "Flight Software Developer – CubeSat Mission",
-    company_name: "PDEU | SSP-X ISRO Team",
-    icon: isro,
-    iconBg: "#1a1a1a",
-    date: "Jan 2024 - Present",
+    title: "Software Engineer Intern (Web & Mobile)",
+    company_name: "BasicTech",
+    icon: bt,
+    iconBg: "#0d0d0d",
+    date: "June 2025 – October 2025",
     points: [
-      "Part of the official SSP-X team at PDEU in collaboration with ISRO, developing onboard flight software for a CubeSat mission.",
-      "Designing and implementing system architecture for fault-tolerant operations, telemetry, and real-time control loops.",
-      "Researching RTOS choices (RTEMS, FreeRTOS, etc.) and developing error handling, data communication, and ground station interfacing modules.",
-      "Contributing to an academic review paper on CubeSat software architecture and fault-tolerant frameworks — currently in progress.",
+      "Engineered HillQuill, a production-grade article publishing platform using Next.js, Node.js, MySQL, and analytics with role-based admin and author panels; increased user time-on-site by 40%.",
+      "Designed and deployed Go-ToIMS, a multi-tenant inventory and manufacturing SaaS using React Native, Node.js, MySQL, Docker, and Azure with per-tenant database isolation ensuring zero cross-tenant data leakage.",
+      "Orchestrated real-time inventory tracking and BOM-driven manufacturing workflows, reducing manual stock operations by 65% and improving order fulfillment speed by 30%.",
+      "Automated CI/CD pipelines via GitHub Actions, reducing deployment failures by 80% and accelerating release cycles.",
+    ],
+  },
+  {
+    title: "Full-Stack Mobile Engineer (Freelance)",
+    company_name: "NewTech InfoSoft",
+    icon: newtech,
+    iconBg: "#ffffff",
+    date: "November 2025 – December 2025",
+    points: [
+      "Designed and developed a private enterprise-grade internal communication mobile app for 500 employees using React Native (Expo), Node.js, MySQL, Redis, and WebSockets.",
+      "Enabled real-time 1-to-1 and group messaging with offline sync and multi-device presence handling 500+ daily messages with sub-150ms latency.",
+      "Architected role-based admin tooling with audit logs and Redis-backed pub/sub for reliable real-time updates across devices.",
+      "Deployed Dockerized backend behind Nginx with Azure Blob Storage and APNs, reducing notification noise by 40%.",
     ],
   },
 ];
 
 const testimonials = [
+  {
+    testimonial:
+      "Samarth developed the chat application for us, and the overall experience was excellent. The app works smoothly and is highly responsive. He ensured strong performance, paid attention to efficiency, and delivered the project on time without any delays.",
+    name: "Niraj Shah",
+    designation: "Founder",
+    company: "NewTech InfoSoft",
+    image: "https://randomuser.me/api/portraits/men/1.jpg",
+  },
   {
     testimonial:
       "I've had the pleasure of working with Samarth on several projects, and I can say without hesitation that he's one of the most capable individuals I've collaborated with. His intelligence is matched only by his exceptional work ethic. Samarth consistently demonstrates strong ownership and accountability, helping us deliver projects ahead of schedule. He's someone I can always count on.",
@@ -164,6 +184,31 @@ const testimonials = [
 ];
 
 const projects = [
+  {
+    name: "Code Connect Live",
+    description:
+      "A modern, real-time collaborative code editor platform that enables developers to code together seamlessly with advanced features like live editing, chat, whiteboard, AI assistance, and immersive UI effects.",
+    tags: [
+      {
+        name: "Next.js",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "TypeScript",
+        color: "green-text-gradient",
+      },
+      {
+        name: "Socket.IO",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "MongoDB",
+        color: "orange-text-gradient",
+      },
+    ],
+    image: codeconnect,
+    source_code_link: "https://github.com/",
+  },
   {
     name: "StoreIt",
     description:

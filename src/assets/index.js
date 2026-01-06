@@ -25,10 +25,17 @@ import meta from "./company/meta.png";
 import shopify from "./company/shopify.png";
 import starbucks from "./company/starbucks.png";
 import tesla from "./company/tesla.png";
+import webpack from "./company/webpacl.png";
+import newtech from "./company/image.png";
+import bt from "./company/basictech.png";
 
 import carrent from "./carrent.png";
 import jobit from "./jobit.png";
 import tripguide from "./tripguide.png";
+import codeconnect from "./project/code-connect.png";
+import storeit from "./project/storeit.png";
+import inventory from "./project/inventory-project.jpeg";
+import fluentify from "./project/fluentify.png";
 
 export {
   logo,
@@ -56,7 +63,14 @@ export {
   shopify,
   starbucks,
   tesla,
+  webpack,
+  newtech,
+  bt,
   carrent,
   jobit,
   tripguide,
+  codeconnect,
+  storeit,
+  inventory,
+  fluentify,
 };
