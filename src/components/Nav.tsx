@@ -1,18 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { profile } from "@/lib/content";
 
 const links = [
-  { label: "Home", href: "/#top" },
-  { label: "Experience", href: "/#experience" },
-  { label: "Work", href: "/#work" },
-  { label: "About", href: "/#about" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Home", href: "/#top", id: "top" },
+  { label: "Experience", href: "/#experience", id: "experience" },
+  { label: "Work", href: "/#work", id: "work" },
+  { label: "About", href: "/#about", id: "about" },
+  { label: "Contact", href: "/#contact", id: "contact" },
 ];
+
+/** Scroll-spy: returns the id of the section currently in view. */
+function useActiveSection() {
+  const [active, setActive] = useState("top");
+  useEffect(() => {
+    const sections = links
+      .map((l) => document.getElementById(l.id))
+      .filter((el): el is HTMLElement => !!el);
+    if (!sections.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: [0, 0.25, 0.5, 1] }
+    );
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+  return active;
+}
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  const active = useActiveSection();
 
   return (
     <header className="fixed top-0 inset-x-0 z-50">
@@ -34,13 +58,23 @@ export default function Nav() {
 
           {/* center links */}
           <ul className="hidden items-center gap-7 text-sm font-medium md:flex">
-            {links.map((l) => (
-              <li key={l.href}>
-                <a href={l.href} className="transition-colors hover:text-gold">
-                  {l.label}
-                </a>
-              </li>
-            ))}
+            {links.map((l) => {
+              const isActive = active === l.id;
+              return (
+                <li key={l.href}>
+                  <a
+                    href={l.href}
+                    className={`underline-offset-[6px] transition-colors hover:text-gold ${
+                      isActive
+                        ? "text-gold underline decoration-wavy decoration-gold decoration-2"
+                        : "text-ink"
+                    }`}
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
 
           {/* resume */}
@@ -74,7 +108,9 @@ export default function Nav() {
                 <a
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-2xl px-4 py-3 font-medium hover:bg-bg2"
+                  className={`block rounded-2xl px-4 py-3 font-medium hover:bg-bg2 ${
+                    active === l.id ? "text-gold" : ""
+                  }`}
                 >
                   {l.label}
                 </a>

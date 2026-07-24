@@ -137,7 +137,7 @@ export const projects: Project[] = [
     featured: true,
     stats: [
       { value: "3+", label: "Model providers routed" },
-      { value: "Token", label: "metered billing" },
+      { value: "1", label: "key · every model" },
     ],
     role: "Backend & AI Engineer",
     timeline: "2026",

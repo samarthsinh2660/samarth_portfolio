@@ -117,16 +117,16 @@ function ProjectCard({ project }: { project: Project }) {
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className="relative flex w-full max-w-4xl -rotate-[1.5deg] flex-col items-stretch gap-6 md:flex-row md:items-center"
+      className="relative flex w-full max-w-6xl -rotate-[1.5deg] flex-col items-stretch gap-6 md:flex-row md:items-center"
     >
       {/* image */}
-      <div className="relative z-10 md:w-[44%] md:shrink-0">
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] bg-[#14100e] shadow-2xl ring-1 ring-black/30">
+      <div className="relative z-10 md:w-[46%] md:shrink-0">
+        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[2rem] bg-[#14100e] shadow-2xl ring-1 ring-black/30">
           <Image
             src={project.image}
             alt={project.title}
             fill
-            sizes="(max-width: 768px) 100vw, 44vw"
+            sizes="(max-width: 768px) 100vw, 46vw"
             className="object-contain"
           />
         </div>
@@ -134,7 +134,7 @@ function ProjectCard({ project }: { project: Project }) {
 
       {/* panel */}
       <div
-        className="relative flex flex-1 flex-col rounded-[2rem] p-7 shadow-2xl transition-colors duration-300 md:-ml-16 md:py-9 md:pl-24 md:pr-9"
+        className="relative flex flex-1 flex-col rounded-[2rem] p-7 shadow-2xl transition-colors duration-300 md:-ml-16 md:py-7 md:pl-24 md:pr-9"
         style={{ background: t.panel }}
       >
         {/* red pointer notch toward the image */}
