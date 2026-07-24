@@ -117,17 +117,17 @@ function ProjectCard({ project }: { project: Project }) {
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className="relative flex w-full max-w-5xl flex-col items-stretch gap-6 md:flex-row md:items-center"
+      className="relative flex w-full max-w-4xl -rotate-[1.5deg] flex-col items-stretch gap-6 md:flex-row md:items-center"
     >
       {/* image */}
-      <div className="relative z-10 md:w-[42%] md:shrink-0">
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-black/20">
+      <div className="relative z-10 md:w-[44%] md:shrink-0">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] bg-[#14100e] shadow-2xl ring-1 ring-black/30">
           <Image
             src={project.image}
             alt={project.title}
             fill
-            sizes="(max-width: 768px) 100vw, 40vw"
-            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 44vw"
+            className="object-contain"
           />
         </div>
       </div>
