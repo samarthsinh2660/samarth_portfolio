@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
+/* ---------- Design tokens (dark warm-red mood) ---------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #141110;          /* charcoal */
+  --bg-2: #1c1715;
+  --panel: #9e3b2d;       /* deep warm red section panel */
+  --panel-soft: #7f2e23;
+  --ink: #f3e9db;         /* cream — primary text */
+  --ink-soft: #b3a89a;    /* muted text */
+  --accent: #d64a34;      /* red-orange for display + CTA */
+  --gold: #e7c884;        /* gold highlight / resume */
+  --card: #211b18;        /* dark card */
+  --line: rgba(243, 233, 219, 0.12);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg-2);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-accent: var(--accent);
+  --color-gold: var(--gold);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --font-display: var(--font-display-src);
+  --font-sans: var(--font-sans-src);
+  --font-mono: var(--font-mono-geist);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+/* Lenis smooth scroll owns scrolling; keep native smooth as a fallback only */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans-src), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* subtle film grain */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* oversized display heading helper */
+.display {
+  font-family: var(--font-display-src), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+/* marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+}
+
+/* mascot idle motion */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(-1.2deg); }
+}
+.mascot-float {
+  animation: float 6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+.mascot-blink {
+  animation: blink 4.4s infinite;
+  transform-origin: center;
 }
