@@ -23,9 +23,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ankit Dularia — Personal Portfolio",
+  title: "Samarth Vala — Software Engineer",
   description:
-    "Explore my portfolio of intuitive design solutions, innovative interfaces, and user-centered experiences. Specializing in impactful, accessible designs for web and mobile apps.",
+    "Portfolio of Samarth Vala — a software engineer building fast, reliable web & mobile products. Webpack core contributor, real-time systems, and multi-tenant SaaS.",
 };
 
 export default function RootLayout({

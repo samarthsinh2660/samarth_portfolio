@@ -80,7 +80,14 @@ body::before {
   to { transform: translateX(-50%); }
 }
 .animate-marquee {
-  animation: marquee 22s linear infinite;
+  animation: marquee 40s linear infinite;
+}
+@keyframes marquee-rev {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+.animate-marquee-rev {
+  animation: marquee-rev 46s linear infinite;
 }
 
 /* mascot idle motion */

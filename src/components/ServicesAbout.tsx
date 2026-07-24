@@ -17,7 +17,7 @@ import {
 import CountUp from "./CountUp";
 
 const DESK = "/ankit/OU2N8fmCZPy5UcRl850My3naOU.jpg";
-const PORTRAIT = "/ankit/WOo33WfHeltZg5anoAMOWEDGI4E.jpg";
+const PORTRAIT = "/profile.jpeg";
 
 /**
  * Services → About. The left column scrolls from the "What I can do for you"

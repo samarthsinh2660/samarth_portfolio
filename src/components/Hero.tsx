@@ -1,23 +1,39 @@
 "use client";
 
-import { useRive, Layout, Fit, Alignment, RuntimeLoader } from "@rive-app/react-canvas";
+import { useEffect } from "react";
+import {
+  useRive,
+  Layout,
+  Fit,
+  Alignment,
+  RuntimeLoader,
+} from "@rive-app/react-canvas";
 import { profile } from "@/lib/content";
 
 // Serve the Rive wasm from our own domain so the hero works fully offline.
 RuntimeLoader.setWasmUrl("/ankit/rive.wasm");
 
 /**
- * Hero — the real Framer Rive animation (avatar + clouds + bubbles) drawn on a
- * transparent canvas, layered over the maroon background and the giant "ANKIT"
- * wordmark, with the role label on the right.
+ * Hero — the Rive animation (avatar + clouds). The subtitle is an editable text
+ * run, overridden at runtime with the role. The big wordmark is baked as vector
+ * outlines in the .riv, so it's covered with our own watermark of the name.
  */
 export default function Hero() {
-  const { RiveComponent } = useRive({
+  const { rive, RiveComponent } = useRive({
     src: "/ankit/hero.riv",
     stateMachines: "State Machine 1",
     autoplay: true,
     layout: new Layout({ fit: Fit.Cover, alignment: Alignment.BottomCenter }),
   });
+
+  useEffect(() => {
+    if (!rive) return;
+    try {
+      rive.setTextRunValue("Run 1", profile.role.toUpperCase());
+    } catch {
+      /* run not present */
+    }
+  }, [rive]);
 
   return (
     <section
@@ -25,20 +41,11 @@ export default function Hero() {
       className="relative isolate flex min-h-[100svh] overflow-hidden"
       style={{ background: "var(--panel)" }}
     >
-      {/* giant name behind */}
-      <h1
-        aria-hidden
-        className="display pointer-events-none absolute inset-x-0 top-[24%] z-0 select-none text-center text-[24vw] leading-none text-black/20"
-      >
-        {profile.firstName.toUpperCase()}
+      <h1 className="sr-only">
+        {profile.name} — {profile.role.replace(/^A\s+/, "")}
       </h1>
 
-      {/* role label — right */}
-      <span className="pointer-events-none absolute right-[5%] top-[45%] z-0 hidden max-w-[9rem] text-right text-sm font-semibold uppercase tracking-[0.12em] text-black/40 lg:block">
-        {profile.role}
-      </span>
-
-      {/* rive animation overlay */}
+      {/* rive art (wordmark + subtitle overridden with the current name/role) */}
       <RiveComponent className="absolute inset-0 z-10 h-full w-full" />
     </section>
   );

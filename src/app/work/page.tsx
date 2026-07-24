@@ -6,7 +6,7 @@ import ProjectCard from "@/components/ProjectCard";
 import { projects } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "All Work — Ankit Dularia",
+  title: "All Work — Samarth Vala",
   description: "Selected design work — apps, interfaces, and case studies.",
 };
 
@@ -26,8 +26,8 @@ export default function WorkPage() {
             All <span className="text-accent">work</span>
           </h1>
           <p className="mt-4 max-w-lg text-lg text-ink-soft">
-            The full archive — {projects.length} projects spanning apps,
-            interfaces, branding, and design systems.
+            The full archive — {projects.length} projects spanning SaaS
+            platforms, mobile apps, AI infrastructure, and open source.
           </p>
         </section>
 

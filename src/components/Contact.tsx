@@ -8,7 +8,7 @@ const footerLinks = [
   { label: "Home", href: "/#top" },
   { label: "About", href: "/#about" },
   { label: "Work", href: "/#work" },
-  { label: "View Resume", href: "#" },
+  { label: "View Resume", href: profile.resumeHref },
   { label: "404", href: "/404" },
 ];
 
@@ -107,12 +107,12 @@ export default function Contact() {
               LinkedIn
             </a>
             <a
-              href={profile.instagram}
+              href={profile.github}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 rounded-full bg-neutral-800 px-4 py-3 text-center text-sm font-medium text-ink transition-colors hover:bg-neutral-700"
             >
-              Instagram
+              GitHub
             </a>
             <a
               href={`mailto:${profile.email}`}
@@ -125,15 +125,10 @@ export default function Contact() {
       </div>
 
       {/* bottom bar */}
-      <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 pb-8 pt-10 text-sm text-ink/70 sm:flex-row">
-        <p>
-          Copyright@{new Date().getFullYear()}
-          <br />
-          {profile.name}
+      <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-center px-5 pb-8 pt-10 text-sm text-ink/70">
+        <p className="text-center">
+          Copyright@{new Date().getFullYear()} · {profile.name}
         </p>
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 font-display text-sm font-bold tracking-tight text-ink">
-          AD
-        </span>
       </div>
     </section>
   );

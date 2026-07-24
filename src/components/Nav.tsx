@@ -5,6 +5,7 @@ import { profile } from "@/lib/content";
 
 const links = [
   { label: "Home", href: "/#top" },
+  { label: "Experience", href: "/#experience" },
   { label: "Work", href: "/#work" },
   { label: "About", href: "/#about" },
   { label: "Contact", href: "/#contact" },
@@ -19,12 +20,9 @@ export default function Nav() {
         <div className="flex items-center justify-between rounded-full border border-line bg-card/80 px-4 py-2 backdrop-blur-md">
           {/* brand + status */}
           <a href="/#top" className="flex items-center gap-2.5 pl-1">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/ankit/AG9bkUjqkuxlXldaSw2vVzqQ.svg"
-              alt="Ankit Dularia"
-              className="h-8 w-8"
-            />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent font-display text-xs font-bold tracking-tight text-white">
+              SV
+            </span>
             <span className="hidden items-center gap-2 text-sm text-ink-soft sm:flex">
               Available for work
               <span className="relative flex h-2 w-2">
@@ -48,6 +46,8 @@ export default function Nav() {
           {/* resume */}
           <a
             href={profile.resumeHref}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hidden items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-bg transition-transform hover:-translate-y-0.5 md:inline-flex"
           >
             View Resume ↗

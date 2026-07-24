@@ -8,8 +8,9 @@ import { useInView } from "framer-motion";
  * into view — matches the About stats in the reference.
  */
 export default function CountUp({ value }: { value: string }) {
-  const match = value.match(/(\d+)(.*)/);
-  const target = match ? parseInt(match[1], 10) : 0;
+  const match = value.match(/([\d.]+)(.*)/);
+  const target = match ? parseFloat(match[1]) : 0;
+  const decimals = match && match[1].includes(".") ? 1 : 0;
   const suffix = match ? match[2] : value;
 
   const ref = useRef<HTMLSpanElement>(null);
@@ -23,7 +24,7 @@ export default function CountUp({ value }: { value: string }) {
     const start = performance.now();
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
-      setN(Math.round(p * target));
+      setN(p * target);
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -32,7 +33,7 @@ export default function CountUp({ value }: { value: string }) {
 
   return (
     <span ref={ref}>
-      {n}
+      {n.toFixed(decimals)}
       {suffix}
     </span>
   );
