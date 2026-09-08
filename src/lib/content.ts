@@ -151,6 +151,31 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "pramana-ai",
+    title: "Pramāṇa AI — Indian Legal Intelligence",
+    blurb:
+      "An AI-first legal research platform for Indian law that retrieves from primary sources, keeps provenance on every claim, and verifies each generated statement against its cited source — so it can't invent case law.",
+    tags: ["Next.js", "FastAPI", "LangGraph", "Neo4j"],
+    image: "/work/pramana.png",
+    link: "https://legal-ai-swart-one.vercel.app/",
+    category: "Legal Tech · RAG",
+    theme: "cream",
+    stats: [
+      { value: "0.92", label: "claim-verification accuracy" },
+      { value: "48K+", label: "statutes & judgments indexed" },
+    ],
+    role: "Full-Stack & AI Engineer",
+    timeline: "2026",
+    year: "2026",
+    overview:
+      "Pramāṇa is an AI-first legal research platform for Indian law. A multi-agent pipeline (Supervisor → parallel Researchers → Analyst → Verifier) retrieves across three authority tiers, and every claim is checked against its cited source before the user sees it — the fix for hallucinated case law is architectural, not prompt-level.",
+    highlights: [
+      "Multi-agent RAG with a verification stage that checks every claim against its cited source.",
+      "Hybrid keyword + vector search over 35K+ statute sections and 12K+ judgments, plus a Neo4j citation graph for multi-hop precedent traversal.",
+      "0.92–0.94 claim-verification accuracy on frozen evaluation sets.",
+    ],
+  },
+  {
     slug: "inventory-saas",
     title: "Multi-Tenant Inventory Management",
     blurb:
