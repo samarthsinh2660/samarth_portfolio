@@ -1,5 +1,5 @@
 /**
- * Content for Ankit Dularia's portfolio. Edit values here and they flow
+ * Content for Samarth vala's portfolio. Edit values here and they flow
  * through every component.
  */
 
