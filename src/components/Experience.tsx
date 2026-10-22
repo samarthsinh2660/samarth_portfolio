@@ -30,7 +30,7 @@ export default function Experience() {
           </p>
           <p className="mt-8 font-mono text-sm text-gold">
             {experiences.filter((e) => e.kind === "work").length} roles ·
-            open-source contributor
+            open-source maintainer
           </p>
         </div>
 
@@ -59,11 +59,15 @@ export default function Experience() {
                 {e.location && (
                   <span className="text-ink-soft">· {e.location}</span>
                 )}
-                {e.kind === "opensource" && (
+                {e.badge ? (
+                  <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-gold">
+                    {e.badge}
+                  </span>
+                ) : e.kind === "opensource" ? (
                   <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-accent">
                     Open Source
                   </span>
-                )}
+                ) : null}
               </div>
               <h3 className="mt-2 text-xl font-bold text-ink md:text-2xl">
                 {e.title}

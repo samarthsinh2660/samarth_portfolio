@@ -341,9 +341,25 @@ export type Experience = {
   date: string;
   points: string[];
   kind: "work" | "opensource";
+  /** optional emphasis pill, e.g. "Maintainer" */
+  badge?: string;
 };
 
 export const experiences: Experience[] = [
+  {
+    title: "Open-Source Maintainer",
+    company: "flutter_edge_ai",
+    link: "https://github.com/DenisovAV/flutter_edge_ai",
+    location: "Remote",
+    date: "Sep 2026 – Present",
+    kind: "opensource",
+    badge: "Maintainer",
+    points: [
+      "Maintainer of flutter_edge_ai (on-device LLM inference for Flutter) — many merged PRs across the inference engine, diagnostics, and platform support.",
+      "Designed & shipped flutter_gemma_diagnostics, a cross-platform (Android / iOS / macOS) memory-diagnostics subsystem for on-device models — anonymous / file-backed / peak / GPU memory via dart:ffi with zero native channels — from proposal to delivery across a series of PRs.",
+      "Fixed LiteRT-LM GPU inference (FunctionGemma float32) and hardened the native StreamProxy FFI ABI, verified in C under ThreadSanitizer.",
+    ],
+  },
   {
     title: "Software Engineer Intern",
     company: "OpsHub, Inc.",
