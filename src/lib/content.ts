@@ -12,7 +12,7 @@ export const profile = {
   location: "Available for work",
   email: "samarthsinh2660@gmail.com",
   resumeHref:
-    "https://drive.google.com/file/d/1bUSvPTNkp8d1923yXfvhbvoZEgYG58dX/view?usp=drive_link",
+    "https://drive.google.com/file/d/1GD_aUjX64HB_FhIfo-Kx-AENBTMjhiKz/view?usp=sharing",
   bio: "I'm Samarth Vala — a software engineer who ships production systems and contributes to open-source core. I've built a payroll & HR platform for 400+ employees, a real-time communication suite for 500+ users, and UNIUN — a decentralized second brain with fully on-device AI. I contribute to Webpack, CNCF Backstage, and C2SI, and I study Computer Science at PDEU with a 9.58 CGPA.",
   github: "https://github.com/samarthsinh2660",
   linkedin: "https://www.linkedin.com/in/samarth-vala-489a3428a/",
