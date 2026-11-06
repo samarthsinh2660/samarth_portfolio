@@ -5,12 +5,12 @@
 > pulled from GitHub. GitHub-UI noise removed; the engineering is kept. Use for resume
 > bullets, portfolio case studies, and verifiable proof.
 
-**Totals:** 29 merged PRs · 2 open PRs · 5 issues filed, across 4 projects ·
+**Totals:** 35 merged PRs · 1 open PR · 6 issues filed, across 4 projects ·
 **Maintainer** at flutter_edge_ai.
 
 | Project | Role | Merged | Open | Issues |
 |---|---|---|---|---|
-| [flutter_edge_ai](https://github.com/DenisovAV/flutter_edge_ai) | **Maintainer** | 13 | 1 | 5 |
+| [flutter_edge_ai](https://github.com/DenisovAV/flutter_edge_ai) | **Maintainer** | 19 | 0 | 6 |
 | [webpack](https://github.com/webpack/webpack) | Contributor | 6 | 1 | — |
 | [Backstage (CNCF)](https://github.com/backstage/backstage) | Contributor | 4 | — | — |
 | [C2SI · Webiu](https://github.com/c2siorg/Webiu) | Contributor | 6 | — | — |
@@ -27,10 +27,11 @@ flutter_edge_ai brings **on-device LLM / ML inference to Flutter** — the LiteR
 and ONNX engines across Android, iOS, macOS, Windows and Linux, running Gemma / FunctionGemma
 / Qwen3 models on CPU, GPU and NPU, over a native C/FFI layer under a Dart API.
 
-**At a glance:** 13 merged PRs · 1 open · 5 issues. Headline: I **designed and shipped
+**At a glance:** 19 merged PRs · 6 issues. Headline: I **designed and shipped
 `flutter_gemma_diagnostics`**, a cross-platform memory-diagnostics subsystem for on-device
-model inference — from the proposal (#517) through ~10 merged PRs — plus LiteRT-LM engine /
-native-FFI correctness fixes and new platform support.
+model inference — now covering **Android, iOS, macOS, Linux and Windows** — from the proposal
+(#517) through a dozen merged PRs, plus LiteRT-LM / MediaPipe / ONNX engine fixes and new
+native-build support.
 
 ---
 
@@ -40,7 +41,8 @@ The problem I scoped: there was no way to see how much memory a loaded model act
 the app, and a single "RSS" number is misleading (iOS jetsam enforces `phys_footprint`;
 Android `lmkd` reacts to device-wide pressure; GPU memory sits outside the heap counters).
 I proposed and built an opt-in diagnostics package read purely through `dart:io` + `dart:ffi`
-(no Kotlin/Swift/Gradle/podspec, no native channel), then wired it into the example benchmark.
+(no Kotlin/Swift/Gradle/podspec, no native channel), wired it into the example benchmark, and
+extended it from mobile to **desktop Linux and Windows** (#715, #753) — closing issue #698.
 
 ### feat(diagnostics): anonymous footprint and available memory, read from the OS (#517)
 `#541` · **MERGED** · +958/−0 · https://github.com/DenisovAV/flutter_edge_ai/pull/541
@@ -450,6 +452,93 @@ Part of #517: an experimental GPU memory reading. Reshaped after the review: a s
 
 ---
 
+### feat(diagnostics): Linux support for memorySnapshot (flutter_edge_ai_diagnostics 0.5.0)
+`#715` · **MERGED** · +183/−114 · https://github.com/DenisovAV/flutter_edge_ai/pull/715
+
+First part of #698. **`memorySnapshot()` reads `/proc` on Linux the way it does on Android; `gpuMemory()` returns null there.**
+
+#### What changed
+- `flutter_edge_ai_diagnostics` 0.5.0: `isSupported` is true on Linux and `memorySnapshot()` reads `/proc/self/smaps_rollup` and `/proc/meminfo` (same reader as Android). `anonymousPeakBytes` is null; `availableBytes` is machine-wide `MemAvailable`.
+- `gpuMemory()` returns null on Linux and never enables the kgsl reader. An AppArmor refusal of `smaps_rollup` stays a `MemoryReadException`.
+- Docs say what Sasha asked for in #698: the cost, GPU memory in neither field (on an integrated GPU it is still system RAM), the swap-page-in case in `Private_Clean`, and that `availableBytes` ignores a cgroup `memory.max`.
+- `linux:` under `platforms:`, the description and the comment above it, one CHANGELOG line, and every "Android, iOS and macOS" copy: package README, root README, diagnostics skill, website (diagnostics, installation, packages, troubleshooting), AGENTS.md, review-pr skill.
+- The two tests that asserted "Linux is unsupported" now assert the Linux behaviour, and the example's integration test treats Linux like Android for `fileBackedBytes` and `availableBytes`.
+
+#### Why
+Piece 1 of the plan agreed in #698. Linux reads the same kernel files as Android, so no new reader is needed; the work is the platform gate, the tests and saying accurately what the numbers mean there. Windows (piece 2) is a separate PR after its measurements.
+
+#### Testing
+- `tool/test_all.sh`: all 18 tested packages ok, plus `check_core_surface`, `check_web_graph` and the workspace integration tests. In that single full run the two `flutter_edge_ai_llama` entries hung on llamadart's native download (a stalled GitHub connection, unrelated to this change), so I downloaded the archive by hand and reran them alone: package 209 passed (10 skipped), example 14 passed.
+- `flutter analyze packages/`: 0 errors, 0 warnings (562 infos in other packages, none in diagnostics). `dart format`: clean on the changed files. `dart tool/check_skills.dart`: 0 errors.
+- Package tests: 70 passed, 3 skipped (the "unsupported host" cases, which only run on Windows). Mutation: removing Linux from `isSupported`, from `memorySnapshot()`, or making `gpuMemory()` throw on Linux each turns a new Linux test red.
+- `flutter test integration_test/diagnostics_memory_test.dart -d linux` (example app): 3/3 passed.
+
+#### Measured on hardware
+Ubuntu, kernel 7.0.0-38, i5-12450H, 16 GB, 4 GB swap, Intel Alder Lake-P iGPU + NVIDIA RTX 3050 Mobile.
+
+| What | Result |
+|---|---|
+| `memorySnapshot()` cost, idle | 1.72 ms median (1.38 to 8.31) |
+| 4 GiB file mapped and touched | 15.24 ms |
+| plus 3 GiB anonymous written | 29.57 ms |
+| per resident GiB | about 3.7 ms, almost all the kernel's rollup walk |
+| FunctionGemma 270M on the GPU, Intel | 700 to 835 MiB `drm-resident-system0`; device mappings 0 MiB |
+| FunctionGemma 270M on the GPU, NVIDIA | `nvidia-smi` +442 MiB device-wide; device mappings 15.1 MiB (`/dev/nvidiactl`) |
+| 512 MiB paged out, then read back | `Private_Clean` 512 MiB, `Swap` 0 |
+| Example integration test | `anonymousBytes` rose 270,102,528 bytes for a 256 MiB allocation; `fileBackedBytes` and `availableBytes` positive |
+| `smaps_rollup` denied by an AppArmor profile (loaded by hand) | Dart raises `PathAccessException` (EACCES), not `PathNotFoundException`, so it is a `MemoryReadException` |
+
+One machine, one run each; the GPU run is a 13 s test.
+
+#### Not verified
+- A real snap whose AppArmor profile lacks the `smaps_rollup` rule: Firefox, LocalSend and Postman on this snapd all allow it, so the refusal was reproduced with a hand-written profile instead.
+- Kernels older than 4.14 (no `smaps_rollup`): covered by a fixture test, not a real kernel.
+
+#### Not in here
+- Windows (piece 2); the numbers it needs are being measured.
+- A DRM-based GPU memory reader for Linux, and reading a cgroup `memory.max` for `availableBytes`.
+
+
+
+---
+
+### feat(diagnostics): memorySnapshot() on Windows (#698)
+`#753` · **MERGED** · +907/−117 · https://github.com/DenisovAV/flutter_edge_ai/pull/753
+
+Piece 2 of #698 (Windows), as approved in the comment of 2026-10-29. Everything stays inside `flutter_edge_ai_diagnostics` 0.6.0; no native code.
+
+#### What it reads
+| Field | Windows source |
+|---|---|
+| `anonymousBytes` | `PagefileUsage` (= `PrivateUsage`, the commit charge) |
+| `anonymousPeakBytes` | `PeakPagefileUsage` |
+| `fileBackedBytes` | `WorkingSetSize - PrivateWorkingSetSize` (`_EX2`, cb 96); null when the field was not written |
+| `availableBytes` | `ullAvailPhys` (`GlobalMemoryStatusEx`), machine-wide |
+| `gpuMemory()` | null |
+
+The buffer is pre-filled with `0xAB`, so a field the OS did not write is told apart from a genuine 0. cb 96 falls back to cb 72 (`fileBackedBytes` null). A failed call, or a missing required field, throws `MemoryReadException`; a private working set above the working set nulls only `fileBackedBytes`. The docs carry the commit-at-allocation semantics and the FunctionGemma numbers from #698.
+
+#### Also in the PR
+`windows:` in the pubspec platforms, the CHANGELOG line, every copy of the platform list, and a `test-diagnostics-windows` job on `windows-latest`.
+
+#### Tests
+- Hand-built replies on every host: sentinel path, cb 96 -> 72 fallback, re-marked buffer, a failed call, each required field unwritten.
+- A Windows host group (skipped elsewhere): real snapshot, commit follows an untouched 96 MiB `calloc`, `PagefileUsage == PrivateUsage`, `gpuMemory()` null.
+- Mutations of the sentinel check, the re-mark, the required-field check and the subtraction each made a test fail.
+
+#### Measured on Windows 11 build 26200, x64 (i5-12450H)
+- `flutter test` in the package: 87 passed, 12 skipped. `integration_test/diagnostics_memory_test.dart -d windows`: 3/3.
+- `anonymousBytes` equals the process's private bytes (the Details "Commit size" figure) at three points: 281.0, 536.5, 536.5 MiB. A 256 MiB write moved it by 256.5 MiB.
+- `fileBackedBytes` non-null (112.7 MiB), so cb 96 is accepted there.
+- FunctionGemma 270M on CPU, three fresh processes: commit +388.5 to +391.0 MiB at load, +527.8 to +530.3 after the first prompt; 14 to 19 MiB left after close.
+- About 7 µs per snapshot (`dart run`, JIT).
+
+Not verified: Windows ARM64, a Windows older than the `_EX2` struct (the fallback runs only on hand-built replies), a release build for the timing. The ~360 MiB left after closing a GPU model is the separate follow-up.
+
+
+
+---
+
 ### Feature: memory diagnostics (phys_footprint / anonymous vs file-backed / GPU) for loaded models *(issue)*
 `#517` · **CLOSED** · https://github.com/DenisovAV/flutter_edge_ai/issues/517
 
@@ -496,7 +585,7 @@ I'd be glad to implement this.
 ---
 
 
-## 1B. LiteRT-LM engine & native-FFI fixes
+## 1B. Engine fixes & features — LiteRT-LM · MediaPipe · ONNX
 
 ### fix(litertlm): FunctionGemma bundles with no prefer_activation_type run on the GPU at float32 (#552)
 `#657` · **MERGED** · +753/−50 · https://github.com/DenisovAV/flutter_edge_ai/pull/657
@@ -595,8 +684,108 @@ Per the two asks in the issue:
 
 ---
 
+### fix(mediapipe): web multi-turn chat keeps the model's replies (#705)
+`#720` · **MERGED** · +2634/−544 · https://github.com/DenisovAV/flutter_edge_ai/pull/720
 
-## 1C. Platform support
+Fixes #705. **A MediaPipe web `.task` chat keeps what the model said: the session holds every turn, replies included, and sends them all on each call.**
+
+#### What changed
+- `@mediapipe/tasks-genai` `generateResponse` is stateless, so `WebModelSession` now owns the conversation (`WebConversation`) and renders all of it on every call. Replies reach it two ways, the text it generated and the `InferenceChat` replay, and a reply is never added twice. The raw generated text is what is recorded.
+- Turn markers are read from the `.task` file's own `LlmParameters` metadata (`task_chat_format.dart`, first 4 MiB only), not from a model-type table. The table (`gemma4` -> Gemma 4, `gemmaIt` -> Gemma 3, else plain text) is only the fallback, and a note is printed when it is used.
+- A stop keeps the generated partial. An error drops only the pending turn. The next call waits for a stopped one to end, because MediaPipe refuses a call while the previous one is still ending.
+- Multimodal turns are rendered per turn with the file's markers instead of the hard-coded Gemma 3n wrapper. Media stays in the history. `maxNumImages` counts the whole conversation, and past it the call fails with an error naming it. Nothing is dropped silently. Every turn re-prefills.
+- No public API change. Core's `_chatFormatModeFor` is untouched. `openSession` is out of scope. The `[System: ...]` prefix for `systemInstruction` stays.
+- `flutter_edge_ai_mediapipe` 1.2.4, one CHANGELOG line, README and `mediapipe.md` paragraph.
+
+#### Why
+`InferenceChat` sends one new user message per turn. On the web `.task` path the model never saw its own earlier replies, so every turn after the first was answered without them. Pre-check on `main`, Gemma 4 E2B, raw turn 1 (no replay, no template from us): the reply is empty. 0.10.29's WASM reads `prompt_templates` (proto field 17), and the Gemma 4 `.task` carries the flat template in fields 11/13/14 instead, so the runtime applies no template. That is why the turns have to be rendered by us from the file.
+
+#### Question for you
+`createSession` now closes the previous session and starts a fresh conversation on the already loaded model (as the mobile model does since #308). If you want two sessions to share a conversation, say so and I will change it. `openSession` is not touched.
+
+#### Testing
+- Package tests: `flutter_edge_ai_mediapipe` 30 new VM tests (conversation rendering, session with a JS seam, a real `InferenceChat` rebuild/replay, stop/wait, flatbuffer/proto reader incl. a real `.task` when `TASK_FILE_GEMMA4` is set).
+- Mutation: dropping the replies from the rendering turns the conversation and session tests red, and the browser number chat red (8371 instead of 7382).
+- Browser, per model, no `setUp` (Rule 6b): `cd packages/flutter_edge_ai/example && flutter drive -d web-server --no-headless --driver=test_driver/web_mediapipe_multiturn_driver.dart --target=integration_test/web_mediapipe_multiturn_test.dart` (needs chromedriver on 4444). Three checks per model: a fruit pair, a number+1 chat (the fruit pair is non-discriminating under greedy decoding), and stop-then-continue.
+- `flutter analyze` on the package: no errors or warnings. `dart format` on the changed files only.
+
+#### Measured on hardware
+| Device / OS | Result | Key number |
+|---|---|---|
+| Chrome, Linux, RTX 3050 4 GB (WebGPU), Gemma 4 E2B `.task`, `main` | raw turn 1 empty | 0 chars |
+| same, this PR | passes | Banana/Banana, 7381 -> 7382, stop -> "Done" |
+| Chrome, Linux, software WebGPU, Gemma 4 E4B `.task`, this PR | passes | Mango/Mango, 7391 -> 7392, stop -> "done" |
+| E2B, this PR with replies dropped (mutation) | red | 8371 instead of 7382 |
+
+#### Not verified
+- E4B raw turn 1 on `main`: two runs on software WebGPU timed out in the driver (`Timed out receiving message from renderer: 300.000`). The E4B file declares the same Gemma 4 markers as E2B, so I expect it empty, but I have not measured it. Needs a GPU with more than 4 GB.
+- E4B on a real GPU: the RTX 3050 has 4 GB, E4B gets `GPUOutOfMemoryError`. Same command as above on a bigger card.
+- Gemma 3 1B (`gemma3-1b-it-int4-web`) and 270M (`gemma3-270m-it-q8-web`): the files are gated and I do not have them, so neither the raw turn 1 on `main` nor this PR's run was done. The Gemma 3 path (markers from the file, fallback `gemmaIt`) is covered by the VM tests only. If a raw turn 1 on these answers on its own, a "runtime applies the template" mode is a follow-up.
+
+#### Not in here
+- `openSession` on web (concurrent sessions).
+- Core's `_chatFormatModeFor`.
+
+
+
+---
+
+### feat(onnx): independent openSession/openChat sessions (#703)
+`#765` · **MERGED** · +1158/−125 · https://github.com/DenisovAV/flutter_edge_ai/pull/765
+
+Closes #703
+
+**Independent `openSession` / `openChat` sessions on native ONNX: one ORT-GenAI generator per session, capped by `maxConcurrentSessions`.** Web still throws `UnsupportedError` and follows in a separate PR, as agreed in the thread.
+
+#### What changed
+- `sessionId` on the worker messages and `GenAiClient` (null = the `createSession` session). `stopGeneration`, `resetSession` and the stats take it, so a stop or release of one session never cuts off another's turn in flight.
+- `OnnxInferenceModel.openSession` / `sessions` (and the inherited `openChat`). `maxConcurrentSessions` throws `StateError`: default 2 on Android/iOS, unlimited on desktop; the `createSession` session is not counted. An unset cap cannot mean "unlimited" on a phone (core passes null for "not set"); pass a larger number.
+- A turn that waits on the client lock behind another session's is skipped when its stream was cancelled, a stop was filed, or its session was released, so a closed session cannot build a generator afterwards. A dead worker closes the open sessions; `model.close()` closes them together.
+- Cost documented next to the option, in the README, the site page, the skill and AGENTS.md: about 0.75 MiB x `maxTokens` per open session, allocated at its first turn. `flutter_edge_ai_onnx` 0.8.0.
+
+#### Why
+Design as approved in the #703 thread: one generator per session, no history replay, turns still served one at a time. Replay cost 15 ms/token on Linux and about 300 ms/token on the vivo (numbers in the thread), so a generator per session is the cheaper trade; the price is the KV cache below.
+
+#### Breaking
+`GenAiClient` (exported) gains `sessionId` on `stopGeneration` / `resetSession` and a new `generationStatsOf`; a custom class that `implements GenAiClient` must update. `GenAiTurn` gains an optional `sessionId`. Nothing else in the public API changes. The test fake is updated.
+
+#### Testing
+- `tool/test_all.sh`: 18/18 packages, exit 0 (1 without tests). `flutter analyze packages/`: no errors or warnings. `dart format` clean on changed files. `check_core_surface.sh`, `check_skills.dart` and `skills_lint` pass.
+- onnx package: 179 passed, 5 skipped (was 156).
+- Mutation: each guard was removed and the intended test went red: stop that ignores the session, reset that stops any turn, stats not per session, cap not enforced, session close resetting the legacy session, metrics read from the legacy stats, the parked-turn cancel / stop / released checks, sessions not closed on worker death, reset acks never completed (this one survived the first version of its test, which the client's own 5 s timeout hid; the test now asserts the call returns in under 3 s), and all sessions sharing one real generator (the real-model test fails: A answers "cactus").
+- Cases found while testing the lock and close paths, each with a test and a mutation: a turn waiting behind another session's whose stream is cancelled, stopped or whose session is closed does not run and builds no generator; `model.close()` closes the open sessions together; a dead worker closes them; the legacy session's stats start clean after a reset like an opened one's. Left as designed: an unset cap is the platform default (pass a larger number to allow more), and reset acknowledgements are matched by order (a timed-out reset's waiter stays queued and still gets its ack in order; `Close` completes all of them).
+- Device/host runs: `onnx_multi_session_host_smoke_test.dart` (env `FLUTTER_GEMMA_ORT_GENAI_LIBS`, `ONNX_SMOKE_GENAI_MODEL_DIR`, `ONNX_SESSIONS_CONTEXT`), and from `packages/flutter_edge_ai/example`: `flutter test integration_test/onnx_sessions_android_test.dart -d <phone> --no-uninstall` (needs the model that `onnx_inference_smoke_test.dart` downloads).
+
+#### Measured on hardware
+Phi-3.5-mini cpu-int4, ORT-GenAI 0.17.0, two sessions A and B, one run each (the Android test was run twice, both shown). Step = growth of the process after that session's first turn. Windows numbers are commit charge (the working set moves the same); Linux and Android are RSS.
+
+| Device / OS | context | separate context | A first turn | B first turn | after closing A |
+|---|---|---|---|---|---|
+| Linux x64, i5-12450H | 512 | pass (A "pineapple", B "cactus") | +395 MiB | +387 | 3504 -> 3505, no drop |
+| Linux x64 | 1024 | | 771 MiB per generator (probe) | | RSS did not fall at 512 to 2048, it did at 4096 |
+| Windows 11 x64 (26200), i5-12450H | 512 | pass | +410 | +385 | -385 |
+| Windows 11 x64 | 1024 | pass | +787 | +766 | -769 |
+| Windows 11 x64 | 2048 | pass | +1565 | +1553 | -1538 |
+| Android 11, vivo (Snapdragon 710, 7.6 GiB) | 512 | pass, cap 2 enforced, 3rd session after a close starts clean | +535 / +535 | +352 / +321 | 3419 -> 3418; 3385 -> 3466 (no drop) |
+
+Android peak VmHWM 3.5 GB in both runs. All rows are from the final commit. Windows ran on AC power with the machine kept awake, about 8.5 GB free memory; it gives a closed session's memory back (peak at 2048: 5669 MiB, model plus two sessions). A session opened after the close adds the same amount again (+389 / +775 / +1544).
+
+#### Not verified
+- Windows ARM64 (no such machine; the maintainer has the runner), a real iPhone and macOS (no such machine of ours; the macOS/iOS builds use the same Dart code).
+- The Windows suite (172 passed, 7 skipped) shows 5 failures in `gen_ai_worker_close_test.dart` that are not from this PR (Windows path escaping in the warning text; they fail on main too).
+
+#### Not in here
+- Web `openSession` (Transformers.js `OnnxWebSession`).
+- Core's `InferenceModel.openSession` doc and error text still list only litertlm and MediaPipe as engines with concurrent sessions.
+- The Windows path-escaping test failures above.
+
+
+
+
+---
+
+
+## 1C. Platform & native builds
 
 ### fix(litertlm): say so when Windows ARM64 has no native archive (#326)
 `#654` · **MERGED** · +112/−3 · https://github.com/DenisovAV/flutter_edge_ai/pull/654
@@ -639,38 +828,96 @@ The ONNX Windows ARM64 archives are #568; this changes no support claims, downlo
 ---
 
 ### feat(onnx): add Windows ARM64 native archives (#326)
-`#656` · **OPEN** · +83/−41 · https://github.com/DenisovAV/flutter_edge_ai/pull/656
+`#656` · **MERGED** · +84/−42 · https://github.com/DenisovAV/flutter_edge_ai/pull/656
 
-Supersedes #568, taken over as discussed there: rebased onto the `flutter_edge_ai_onnx` rename with Oxygenesis's commit cherry-picked, authorship kept. Relates to #326.
-
-**Draft until it has run on Windows ARM64 hardware**, as you set on #568. The README, site and `AGENTS.md` say "bundled, hardware smoke test pending" rather than "device-verified". Everything else is in place so it can be marked ready the moment the two checks below pass.
+Supersedes #568, as discussed there. Oxygenesis's Windows ARM64 commit retains its authorship. Relates to #326.
 
 #### What changed
-- `hook/build.dart`: a `windows_arm64` bundle: ORT 1.27.0 `onnxruntime-win-arm64` and ORT-GenAI 0.14.0 `onnxruntime-genai-win-arm64` (the same pins as the other platforms), with the SHA-256 digests and the in-archive DLL paths.
-- `OnnxEngine._isSupportedHost` and `OnnxEmbeddingBackend._isSupportedHost` accept `Abi.windowsArm64`, in lockstep with the hook table; the decline and `StateError` texts list it.
-- Docs in the same change, as asked on #583: package README, `AGENTS.md` (onnx bullet, key-files row, current version), `website/content/docs/{onnx,installation,packages}.md` and the onnx skill list Windows ARM64 as bundled, hardware smoke test pending. Package 0.6.0 (0.5.9 is already on main), one CHANGELOG line.
-- The LiteRT-LM Windows ARM64 notice from #654 (and its README entry and test) no longer say the ONNX engine is x64 only: they point to `flutter_edge_ai_onnx` and say it has not run on ARM64 hardware yet; the x64-under-emulation option is kept.
 
-#### Verified (Linux host, no ARM64 hardware)
-- Both archives downloaded from Microsoft's releases: SHA-256 equals the pins (`a32f2650…952f`, `b6daeedb…3f1b`).
-- The DLLs the hook extracts are ARM64 builds: PE machine `0xAA64` for `onnxruntime.dll` (15,495,520 bytes) and `onnxruntime-genai.dll` (6,052,664 bytes).
-- The real hook, run with `testCodeBuildHook` for `windows/arm64` (temporary probe, not committed): downloads, verifies the checksums in the hook, and returns the 2 code assets (`onnxruntime.dll`, `onnxruntime-genai.dll`). `windows/x64` still returns its 2.
-- Rebased on main 2026-10-20: 151 onnx package tests pass (4 skipped, by design); the litertlm hook tests 55/55; `tool/check_skills.dart` clean; `dart format` clean; `dart analyze`: only the 8 existing info lints in onnx, none in the touched files.
+- Bundle checksum-pinned ORT 1.27.0 and ORT-GenAI 0.14.0 Windows ARM64 archives through the ONNX native-assets hook.
+- Enable `OnnxEngine` and `OnnxEmbeddingBackend` on `Abi.windowsArm64`, in lockstep with the hook.
+- Update the package README, changelog (0.6.0), agent skill, site, and related LiteRT-LM guidance.
+- Merge current `main`, keeping its newer releases and documentation. The ONNX 0.5.10 changelog entry remains below 0.6.0.
 
-#### Verified on Windows 11 x64 (i5-12450H, 16 GB, 2026-10-20; branch head `7d9851ef`)
-- **Real hook, both targets:** `windows/x64` and `windows/arm64` each return 2 code assets; the ARM64 run downloads `onnxruntime-win-arm64-1.27.0.zip` and `onnxruntime-genai-0.14.0-win-arm64.zip` and both checksums verify.
-- **PE machine type read on Windows:** the two ARM64 DLLs are `AA64` (`onnxruntime.dll` 15,495,520 B, `onnxruntime-genai.dll` 6,052,664 B), the two x64 DLLs `8664`.
-- **Tests:** litertlm hook tests 55 pass; onnx suite 151 pass, 4 skipped. Five tests in `gen_ai_worker_close_test.dart` fail on Windows on the fork's main too (a Windows temp path is compared with its JSON-escaped form), so they are not from this PR; with that test line adjusted locally the suite is green. I will send that test fix separately.
-- **`flutter build windows` of the example (x64): built.** It needed three machine-specific workarounds, none in repo files: a `nuget.exe` on PATH, a pub cache path without a space (flutter_scene's hook fails on `C:\Users\Samarthsinh Vala\...`), and `CL=/D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS` for flutter_inappwebview_windows with the VS 2026 toolset. The ONNX DLLs in the output are `8664`.
-- **ONNX generation smoke test on x64** (Phi-3.5-mini cpu-int4, DLLs from that build): both tests pass, 64 tokens at 10.9 tok/s (12.8 in a first run; CPU, i5-12450H).
+#### Verified
 
-So Windows x64 is unchanged by this PR. Nothing here ran on ARM64.
+- **Windows 11 ARM64, GitHub-hosted Azure Cobalt 100, Flutter 3.47.0:** The maintainer ran both smoke tests on head `7d9851ef`. Phi-3.5-mini generation passed 2/2, producing 64 tokens at 10.9 tok/s. MiniLM embeddings passed (dimension 384; cosine 0.556 for similar text versus 0.035 for different text). The example built in release mode for ARM64. Both bundled DLLs are AA64 and byte-identical to Microsoft's archives; the pinned SHA-256 values match. The build needed `CL=/D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS` for flutter_inappwebview_windows with VS 2026.
+- **Windows 11 x64:** Both hook targets returned two code assets; the example built for x64; Phi-3.5-mini generation passed at 10.9 tok/s. The five pre-existing `gen_ai_worker_close_test.dart` failures on that machine also occur on the fork's `main`.
+- **Linux host, after merging main:** ONNX package tests passed 151, with 4 intentional skips. The skill checker passed with 0 errors, formatting is clean, and the ONNX analyzer has only 8 existing info lints outside the touched files. The hook returned both code assets for Windows x64 and ARM64 in the earlier local probe.
+
+The hardware run was on the PR code before the merge commit. The merge brought no ONNX runtime code changes from `main`; its ONNX changes were the 0.5.10 changelog and version.
 
 #### Not verified
-- **Everything that needs Windows ARM64 hardware** (the same two checks passed above on x64): `flutter build windows` of `packages/flutter_edge_ai/example`, and the ONNX smoke tests (`onnx_generation_host_smoke_test.dart`, `onnx_embedding_host_smoke_test.dart`) with `FLUTTER_GEMMA_ORT_GENAI_LIBS`, `ONNX_SMOKE_GENAI_MODEL_DIR`, `FLUTTER_GEMMA_ORT_LIBRARY` and `ONNX_SMOKE_MINILM_DIR`. I have an x64 Windows PC only, and no ARM64 build or run, nor x64 under emulation, was done.
-- The `Abi.windowsArm64` gate itself: `Abi.current()` cannot be faked on a non-ARM64 host, so no unit test covers that clause.
-- `tool/test_all.sh` for the whole workspace (only the onnx and litertlm hook tests were run).
-- The compatibility tables in the READMEs and `migration.md` ("core 2.3.0 · onnx 0.5.8 · …") are release-time and left for the release.
+
+- `tool/test_all.sh` for the entire workspace; the focused ONNX suite was run.
+- The `Abi.windowsArm64` gate in a unit test, because `Abi.current()` cannot be faked on a non-ARM64 host; the real ARM64 smoke tests exercised it.
+
+
+
+---
+
+### feat(onnx): bump ORT-GenAI 0.14.0 to 0.17.0 (#704)
+`#745` · **MERGED** · +3095/−370 · https://github.com/DenisovAV/flutter_edge_ai/pull/745
+
+Fixes #704. **Every ORT-GenAI archive the hook bundles moves from 0.14.0 to 0.17.0, with new pins, header and bindings; ONNX Runtime stays 1.27.0.** Measured on Linux x64, Windows x64 and, with Microsoft's Android library, Android arm64; the Android library this PR now ships is not run on a device yet, and macOS, iOS and Windows ARM64 are not run by me (see "Not verified").
+
+#### What changed
+- `hook/build.dart`: the six archives (macOS arm64, Linux x64, Windows x64, Windows ARM64, the Android AAR, the iOS xcframework zip) point at v0.17.0 with new SHA-256 pins, and the cache key is `ort-1.27.0_genai-0.17.0`, so a 0.14.0 copy is never reused. The archive layouts and the inner library paths are unchanged.
+- `native/headers/ort_genai_c.h` is the v0.17.0 header; `ort_genai_bindings.g.dart` is regenerated with `ffigen_ort_genai.yaml` (ffigen 20.1.1, tag v0.17.0 `1d67be30`).
+- **Android is not Microsoft's AAR (review point 1).** Its 0.17.0 `libonnxruntime-genai.so` lists `libmat.so` (the 1DS telemetry SDK) in `DT_NEEDED`, and `libmat.so` is 4 KB-aligned (`readelf -lW`: `p_align 0x1000` on all three PT_LOAD; genai and ORT are `0x4000`), which Google Play rejects for API 35+ and a 16 KB-page device cannot load. The hook now fetches `onnxruntime-genai-android-0.17.0-a.zip`, built from the same v0.17.0 source (`1d67be30`) by `native/build_genai_android.sh` with `ENABLE_TELEMETRY=OFF` against ORT 1.27.0: it needs only `liblog`, `libm`, `libdl`, `libc`, every PT_LOAD is `0x4000`, and the binary has no OneCollector string. The script checks those three things and prints the zip's SHA-256, which is the pin (`fde5732759bc445c8e01932c5a85652448e02c7c89a090a0982d0c5b9f5535cf`; 2.7 MB zip, 7.2 MB library). **The URL points at a release that does not exist yet** (`native-onnx-genai-v0.17.0-a` on this repo), see the question below. The hook also refuses an Android library with a PT_LOAD below `0x4000` (`lib/src/hook/elf_page_align.dart`, 7 tests; it flags Microsoft's `libmat.so` and passes our library, the example's APK built through the hook contains the new library and no `libmat.so`). The Android cache key is `ort-1.27.0_genai-0.17.0-a`.
+- **Telemetry is off (review point 2).** `GenAiFfiClient` sets `ORT_DISABLE_TELEMETRY=1` before genai is opened and keeps a value the app already set: `setenv(..., 0)` on POSIX, `_wputenv_s` from `ucrtbase.dll` on Windows (`disableGenAiTelemetry`, 2 tests). Traced on Linux with `strace -f -e openat` over the host smoke test: without the call genai opens and creates `~/.cache/Microsoft/DeveloperTools/.onnxruntime/onnxruntime-genai.db` (+ `-wal`, `-shm`); with it, no access to that path in 22,757 traced calls. README section "Telemetry is off, and the Windows runtime".
+- `flutter_edge_ai_onnx` 0.7.0 (minor, as agreed: the API is the same, but guidance on a build without llguidance goes from ignored to an error), one CHANGELOG line (now only the bump and the telemetry).
+- No source change besides the regeneration: the client calls 25 `Oga*` functions and every one has an identical signature in both headers; the ten removed Engine/Request functions (`OgaCreateRequest` ... `OgaRequestSetOpaqueData`) appear only in the generated file.
+
+#### Why
+Needed before constrained decoding (#195). In 0.17.0 `OgaGeneratorParamsSetGuidance` on a build without llguidance throws "Rebuild with use_guidance=true" instead of logging and running unconstrained.
+
+#### Breaking
+Nobody who calls the public API. Anyone who requests guidance through the bindings on Android or iOS (Microsoft's AAR and iOS xcframework are built without llguidance in 0.17.0) now gets an error where 0.14.0 ignored it: measured on Android (below), not yet on iOS.
+
+#### Testing
+- `flutter test` in the package: 154 passed, 4 skipped (host smoke tests skip without env); `flutter analyze`: no new findings (8 infos before and after); `dart format` clean.
+- The hook itself fetched the 0.17.0 Linux archive and verified its pin (`.version` read `ort-1.27.0_genai-0.17.0`).
+- Host smoke: `FLUTTER_GEMMA_ORT_GENAI_LIBS=<dir with both libs> ONNX_SMOKE_GENAI_MODEL_DIR=<Phi-3.5 dir> flutter test test/onnx_generation_host_smoke_test.dart` (generation, a stop, a third turn on the same session, close).
+
+#### Measured on hardware
+Phi-3.5-mini cpu-int4, 64 generated tokens, same machine and model, three runs each, tests passed every time (generation, stop, close):
+
+| Host | 0.14.0 | 0.17.0 |
+|---|---|---|
+| Linux x64 (i5-12450H, ORT 1.27.0) | 14.8 / 15.9 / 14.6 tok/s | 15.9 / 15.0 / 14.7 tok/s |
+| Windows x64 (i5-12450H, ORT 1.27.0), 8 alternating pairs | mean 13.98 tok/s (13.48-14.85) | mean 13.69 tok/s (13.07-14.32), -2.1 %, ranges overlap |
+| Android arm64 (vivo 1933, Android 11, 7.6 GB), `onnx_inference_smoke_test.dart`, Microsoft's AAR | 0.70 / 0.70 / 0.70 tok/s, TTFT 14.1 / 7.4 / 6.8 s, load 6.4 s, VmHWM 3.62 GB | 0.70 / 0.70 / 0.69 tok/s, TTFT 13.3 / 7.5 / 6.9 s, load 10.6 s, VmHWM 3.51 GB |
+
+Threads: the Linux and Windows machine is the same i5-12450H (8 cores, 12 threads). I did not record the vivo's thread count in that run; it goes into the table when the phone is attached for the re-run below.
+
+Windows x64: every run passed on both versions. A first ordered series (0.14.0 x3, then 0.17.0 x3) read 14.22 against 9.82 tok/s; it did not reproduce in the alternating pairs or with fresh copies of the DLLs, and I could not find its cause, so I quote the alternating figure. Peak memory around generation: working set 3,498 MiB (0.14.0) vs 3,509 MiB (0.17.0), commit 3,360 vs 3,368 MiB (+0.3 %). ORT 1.27.0 with GenAI 0.17.0 ran without a fallback to 1.26.0.
+
+
+One run per version on the phone (three turns each). The 0.17.0 load time was the first load after install, the 0.14.0 one a repeat, so I do not read 10.6 against 6.4 s as a difference. Both are far below the issue's 5 tok/s bar; same on both versions.
+
+**Guidance on Android arm64 (the AAR, vivo)**, same probe on both versions (`SetGuidance(lark_grammar)`, `max_length` 128, `OgaCreateGenerator`, one token):
+- 0.14.0: every call returns ok, a token is generated (guidance silently ignored).
+- 0.17.0: `SetGuidance` returns ok; `OgaCreateGenerator` fails with `Guidance is unavailable in this build (guidance_type="lark_grammar"). Rebuild with use_guidance=true.`
+
+Guidance on Windows x64 (own probe, `lark_grammar` / regex / `json_schema`, then one token): accepted on both versions and applied: the grammar `start: "yes" | "no"` produced `yes`, and `start: "banana"` produced `ban`, on 0.14.0 and 0.17.0 alike, so the Windows archive has llguidance.
+
+**Embeddings (plain ORT 1.27.0, MiniLM `test/embedding/onnx_embedding_host_smoke_test.dart`)**: Linux x64 and Windows x64 give `cosine(similar)=0.5559759538432685`, `cosine(different)=0.03533693920106234`, dim 384 on 0.14.0 and on 0.17.0, identical to every digit (ORT is the same 1.27.0 library in both).
+
+Guidance on Linux x64 (a `lark_grammar` request, then `OgaCreateGenerator`, one appended token and one `GenerateNextToken`): accepted on both versions. The 0.17.0 `libonnxruntime-genai.so` is 37 MB against 191 MB.
+
+#### Not verified
+- **The Android library this PR ships has not run on a device.** The numbers above are Microsoft's AAR (with `libmat.so`) on the vivo. I verified the self-built library's ELF properties and that the example APK bundles it without `libmat.so`; generation on the vivo with it is the re-run I owe, and I will add the thread count then.
+- macOS arm64 and the iOS simulator/device slice: no Mac or iPhone available to me. On iOS the xcframework is built without llguidance, so I expect the same guidance error as on Android; not measured. The iOS xcframework links ORT **1.26.0** statically (not 1.27.0; 0.14.0 had 1.25.0). That is Microsoft's choice, so "ORT 1.27.0 everywhere" holds for every host except iOS.
+- Windows: the `_wputenv_s` path of `disableGenAiTelemetry` is written but not run on Windows (the Linux/POSIX path is traced and tested). The 0.17.0 Windows DLLs newly import `MSVCP140_ATOMIC_WAIT.dll` (needs the Visual C++ redistributable; README line for apps that ship the CRT app-local).
+- `OgaShutdown()` (the 0.17.0 header says callers SHOULD call it before exit; the client never does): checked on Linux only. A standalone Dart process that creates a model, appends and generates, then exits without it ends with exit code 0 and no output, and the host smoke test exits 0. macOS and Windows desktop exit are not checked by me.
+- Windows ARM64 (the pin moves with the others) is for the GitHub runner, and a real iPhone for the maintainer, as agreed in the issue.
+- The guidance error path is measured on Android (Microsoft's AAR) only; Windows and Linux archives have llguidance. The self-built Android library does not build llguidance either.
+
+If any host fails only on 0.17.0 the fallback is one ORT pin (1.26.0) for every host; none did so far.
+
+#### Not in here
+Guidance itself (#195) and independent sessions (#703).
 
 
 
@@ -904,8 +1151,43 @@ I'll post the measured numbers here before any engine work.
 
 ---
 
+### diagnostics: what can a web arm report? Spike on Chrome 156 *(issue)*
+`#788` · **OPEN** · https://github.com/DenisovAV/flutter_edge_ai/issues/788
+
+**Question: should `flutter_edge_ai_diagnostics` get a web arm? A small spike says: partly, and only on Chromium with cross-origin isolation.**
+
+Today web is the stub: `isSupported` is false and `memorySnapshot()` / `gpuMemory()` throw `UnsupportedError`. Web is where a tab gets killed for memory, so I measured what the browser can report before proposing anything.
+
+**Spike** (synthetic, not a model load): Chrome 156.0.8078.79 headless, Linux, RTX 3050 laptop, one run per page. One page served with `COOP: same-origin` + `COEP: require-corp` and one without. Each step allocates 256 MB (touched) and then reads the APIs.
+
+| after | `performance.memory.usedJSHeapSize` | `measureUserAgentSpecificMemory()` total | note |
+|---|---|---|---|
+| baseline | 0 MB | 0 MB | |
+| +256 MB `Uint8Array` | 256 | 256 (all "JavaScript") | counted |
+| +256 MB `WebAssembly.Memory` | 256 | 256 | **not counted**; `memory.buffer.byteLength` reads 256 |
+| +256 MB WebGPU buffer, written | 273 | 272 | **not counted** (the +16 MB is my upload chunk) |
+
+Without cross-origin isolation, `measureUserAgentSpecificMemory` is not even defined (`TypeError: ... is not a function`); `performance.memory` still answered here because I passed `--enable-precise-memory-info` (Chrome rounds it otherwise). In the non-isolated run my WebGPU adapter request returned null, which I did not chase, so I make no claim about that case.
+
+**What this means**
+- The two numbers a model app cares about, WASM linear memory and GPU weights, were invisible to both browser memory APIs in this run. `WebAssembly.Memory.buffer.byteLength` is the only direct figure for WASM, and only for a module the app can reach. GPU memory looks unobservable, so `gpuMemory()` would stay null.
+- So a web `MemorySnapshot` would be mostly JS heap. I do not think it should reuse `anonymousBytes` (OS pages) for that; the field meaning would differ per platform in a way that misleads.
+
+**Not measured:** a real EG2 / Gemma web load (the numbers above are synthetic), Firefox, Safari, a second run for noise. Not run: any code.
+
+**Proposal, if you want it** (nothing written until you say):
+1. `isSupported` true on web only when `crossOriginIsolated` and `measureUserAgentSpecificMemory` exist; otherwise today's `UnsupportedError`.
+2. Either a new nullable field for the browser's total, or no web arm at all and a doc note pointing apps to `WebAssembly.Memory`. I lean to the second unless you see a use for the first.
+3. A `dart:js_interop` arm behind a conditional export beside the stub.
+
+Which of these do you want, if any?
+
+
+
+---
+
 ### diagnostics: Linux and Windows, plan for the first piece (follows #517) *(issue)*
-`#698` · **OPEN** · https://github.com/DenisovAV/flutter_edge_ai/issues/698
+`#698` · **CLOSED** · https://github.com/DenisovAV/flutter_edge_ai/issues/698
 
 **Plan only, no code until we agree.** You suggested one piece at a time, so this proposes Linux first and sketches Windows after.
 
@@ -1312,7 +1594,7 @@ No documentation changes.
 ---
 
 ### feat: expose importAttributes to loaders via _importAttributes
-`#20232` · **OPEN** · +56/−3 · https://github.com/webpack/webpack/pull/20232
+`#20232` · **CLOSED** · +56/−3 · https://github.com/webpack/webpack/pull/20232
 
 
 **Summary**
